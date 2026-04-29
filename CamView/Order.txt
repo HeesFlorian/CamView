@@ -1,0 +1,17 @@
+
+Tasks:
+    Camera***.py
+        - containes the functions for the different Cameras.
+
+    FolderManager
+        - containes generateFileString, MoveFiles and CheckFiles
+
+    GUI
+        - contains the User Interface and controlls what the different Buttons do.
+    
+    Settings
+        - contains the global variables that are used.
+        - starts a dayChecker to edit the Date in case the programm runs through the night.
+
+    TCPServer
+        - contains the functions for interfacing with the TCP Server from Labview
