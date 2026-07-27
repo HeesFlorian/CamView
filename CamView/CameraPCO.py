@@ -85,10 +85,10 @@ def Start_acquisition():
 
         number = f"{run_index:04d}"
         cameratype = 'pco'
-        types = ['atoms', 'dark', 'background']
+        types = ['atoms', 'dark1', 'noatoms']
 
         for i, image in enumerate(Images):
-            filename = os.path.join(save_dir, f"{prefix}_{number}_{cameratype}_{types[i]}.tif")
+            filename = os.path.join(save_dir, f"{cameratype}_{prefix}_{number}_{types[i]}.tif")
             Image.fromarray(image).save(filename)
 
         fm.MoveFiles()

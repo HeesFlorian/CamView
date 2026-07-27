@@ -375,7 +375,6 @@ class CamViewWindow(QMainWindow):
 
     def start_flir_acquisition(self):
         try:
-            CamF.prepare_external_trigger()
             CamF.Start_acquisition_thread()
             self.flir_status.setText('Ready and waiting for trigger')
             self.flir_start_button.setEnabled(False)

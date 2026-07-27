@@ -7,8 +7,8 @@ build_exe_options = {
 
 setup(
     name="CamView",
-    version="0.1",
+    version="0.9",
     description="Tool to Control Cameras",
     options={"build_exe": build_exe_options},
-    executables=[Executable("cli.py",base="console")],
+    executables=[Executable("__main__.py",base="console")],
 )

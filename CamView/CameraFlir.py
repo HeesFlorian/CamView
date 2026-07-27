@@ -27,16 +27,25 @@ system = None
 def init_camera():
     global cam, system
 
-    system = PySpin.System.GetInstance()
-    cam_list = system.GetCameras()
-
-    if cam_list.GetSize() == 0:
-        raise RuntimeError("No FLIR cameras found")
-
-    cam = cam_list.GetByIndex(0)
+    camSys = PySpin.System.GetInstance()
+    camList = camSys.GetCameras()
+    if camList.GetSize() == 0:
+        raise Exception("No FLIR cameras found")
+    cam = camList.GetByIndex(0)
     cam.Init()
+    camSys.ReleaseInstance()
 
-    reset_camera()
+def get_cameras_number():
+    global system
+
+    if system is None:
+        system = PySpin.System.GetInstance()
+
+    camList = system.GetCameras()
+    num_cameras = camList.GetSize()
+    camList.Clear()
+
+    return num_cameras
 
 
 def disconnect():
@@ -46,66 +55,12 @@ def disconnect():
 
     try:
         cam.EndAcquisition()
-    except:
-        pass
-
-    try:
         cam.DeInit()
-    except:
-        pass
-
-    try:
-        system.ReleaseInstance()
     except:
         pass
 
     cam = None
     system = None
-
-
-def reset_camera():
-    """Loads camera default user settings safely"""
-    try:
-        cam.UserSetSelector.SetValue(PySpin.UserSetSelector_Default)
-        cam.UserSetLoad()
-    except:
-        pass
-
-
-# =========================
-# SAFE MODE SWITCH HELPERS
-# =========================
-def _set_trigger_off():
-    node = cam.GetNodeMap()
-    trig_mode = PySpin.CEnumerationPtr(node.GetNode("TriggerMode"))
-    trig_mode.SetIntValue(trig_mode.GetEntryByName("Off").GetValue())
-
-
-def _set_software_trigger():
-    node = cam.GetNodeMap()
-
-    trig_selector = PySpin.CEnumerationPtr(node.GetNode("TriggerSelector"))
-    trig_selector.SetIntValue(trig_selector.GetEntryByName("FrameStart").GetValue())
-
-    trig_source = PySpin.CEnumerationPtr(node.GetNode("TriggerSource"))
-    trig_source.SetIntValue(trig_source.GetEntryByName("Software").GetValue())
-
-    trig_mode = PySpin.CEnumerationPtr(node.GetNode("TriggerMode"))
-    trig_mode.SetIntValue(trig_mode.GetEntryByName("On").GetValue())
-
-
-def _set_external_trigger():
-    node = cam.GetNodeMap()
-
-    trig_selector = PySpin.CEnumerationPtr(node.GetNode("TriggerSelector"))
-    trig_selector.SetIntValue(trig_selector.GetEntryByName("FrameStart").GetValue())
-
-    trig_source = PySpin.CEnumerationPtr(node.GetNode("TriggerSource"))
-    trig_source.SetIntValue(trig_source.GetEntryByName("Line0").GetValue())
-
-    trig_mode = PySpin.CEnumerationPtr(node.GetNode("TriggerMode"))
-    trig_mode.SetIntValue(trig_mode.GetEntryByName("On").GetValue())
-
 
 # =========================
 # SINGLE IMAGE (FIXED)
@@ -113,32 +68,21 @@ def _set_external_trigger():
 def take_single_image():
     global cam
 
-    stop_event.set()  # ensure acquisition thread doesn't interfere
-    time.sleep(0.1)
-
-    _set_trigger_off()
+    cam.TriggerSource.SetValue(PySpin.TriggerSource_Software)
+    cam.TriggerMode.SetValue(PySpin.TriggerMode_On)
     cam.AcquisitionMode.SetValue(PySpin.AcquisitionMode_SingleFrame)
-
-    _set_software_trigger()
-
+    cam.ExposureTime.SetValue(S.ExposureF)
+    time.sleep(0.1)
     cam.BeginAcquisition()
-    time.sleep(0.05)
-
-    node = cam.GetNodeMap()
-    trigger_cmd = PySpin.CCommandPtr(node.GetNode("TriggerSoftware"))
-    trigger_cmd.Execute()
-
-    image_result = cam.GetNextImage(2000)
-
-    if image_result.IsIncomplete():
-        image_result.Release()
-        cam.EndAcquisition()
-        return None
-
-    img = image_result.GetNDArray()
-
-    image_result.Release()
+    time.sleep(0.1)
+    cam.TriggerSoftware.Execute()
+    time.sleep(0.1)
+    img = cam.GetNextImage(1000)
+    if img.IsIncomplete():
+        img.Release()
     cam.EndAcquisition()
+
+    img = img.GetNDArray()
 
     return img
 
@@ -152,10 +96,10 @@ def Start_acquisition():
     stop_event.clear()
     status_callback("flir", "Initializing")
 
-    _set_trigger_off()
-    _set_external_trigger()
-
+    cam.TriggerMode.SetValue(PySpin.TriggerMode_On)
+    cam.TriggerSource.SetValue(PySpin.TriggerSource_Line0)
     cam.AcquisitionMode.SetValue(PySpin.AcquisitionMode_Continuous)
+    cam.ExposureTime.SetValue(S.ExposureP) 
 
     status_callback("flir", "Waiting for external trigger")
 
@@ -187,12 +131,12 @@ def Start_acquisition():
                 idx = S.counter
                 S.counter += 1
 
-            labels = ["atoms", "dark", "background"]
+            labels = ["atoms", "dark1", "noatoms"]
 
             for i, im in enumerate(imgs):
                 filename = os.path.join(
                     save_dir,
-                    f"{prefix}_{idx:04d}_flir_{labels[i]}.tif"
+                    f"flix_{prefix}_{idx:04d}_{labels[i]}.tif"
                 )
                 Image.fromarray(im).save(filename)
 
