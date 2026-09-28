@@ -1,0 +1,6 @@
+setup.py
+CamView.egg-info/PKG-INFO
+CamView.egg-info/SOURCES.txt
+CamView.egg-info/dependency_links.txt
+CamView.egg-info/top_level.txt
+test/test.py

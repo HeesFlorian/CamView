@@ -46,11 +46,13 @@ def get_series_prefix():
     return datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
 def take_single_image():
-    cam.set_exposure(S.ExposureF)
+    cam.set_exposure(S.ExposureP)
     cam.set_trigger_mode('software')
     cam.start_acquisition()
     cam.send_software_trigger()
-    image = cam.read_image()
+    time.sleep(S.ExposureP + 1)  
+    image = cam.read_newest_image()
+    cam.stop_acquisition()
     return image
 
 
