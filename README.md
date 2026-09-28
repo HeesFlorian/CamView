@@ -206,12 +206,6 @@ Add a screenshot of the main CamView interface here.
 
 ![CamView Interface](docs/images/camview-interface.png)
 
-### Camera Live View
-
-Add a screenshot of the camera live-view here.
-
-![Camera Live View](docs/images/live-view.png)
-
 ---
 
 ## Development Context
