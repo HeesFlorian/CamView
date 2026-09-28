@@ -29,7 +29,7 @@ Camera communication is implemented through the respective manufacturer SDKs and
 
 ## Architecture
 
-```text
+`
                     ┌─────────────────────┐
                     │       CamView       │
                     │    Qt GUI / C++     │
